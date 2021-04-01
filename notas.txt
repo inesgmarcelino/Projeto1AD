@@ -1,0 +1,119 @@
+Cliente pedem para bloquear determinados recursos do servidor
+Servidor consoante o estado dos recursos vai bloquear ou retornar uma resposta 
+negativa.
+O servidor de LOCK tem uma lista de n recursos que podem ser bloqueados.
+
+Classe lock_pool: é uma classe que contém a lista de recursos do servidor, ou 
+seja, é uma lista de objetos e cada um dos objetos é um recurso que pode ser 
+bloqueado.
+Classe resource_lock: os recursos tem que implementar "bloqueado?", "por quem?",
+"até quando?", "quantas vezes já foi bloqueado?"
+
+Regras básicas do bloqueio:
+-> Se um recurso já foi bloqueado por outro cliente, e um cliente peça o 
+bloqueio desse recurso será negado. Ou seja, apenas um cliente pode bloquear 
+cada recurso.
+-> Cada recurso tem duas variáveis que são importantes:
+	-> K que indica o número de bloqueios que é permitido por recurso antes 
+	de ele se tornar INATIVO ou INDISPONÍVEL.
+	-> Y que indica o número de recursos bloqueados em simultâneo que o 
+	servidor pode permitir.
+-> Se um mesmo cliente quiser voltar a bloquear um recurso que já tinha 
+bloqueado e que ainda não tinha desbloqueado ou expirado o prazo de bloqueio, 
+será aceite e o tempo será extendido, ou seja, se o bloqueio ainda estiver com 
+5 segundos e o cliente voltar a bloquear por 10 segundos, o bloqueio estende 
+para 15 segundos.
+
+NOTA: Neste projeto não precisamos de nos preocupar com múltiplos clientes, 
+apenas um cliente e um servidor podem ser implementados.
+
+Comandos:
+-> LOCK - bloqueio
+-> UNLOCK - desbloqueio
+-> STATUS - estado de um recurso (R: retorna se estã bloqueado ou desbloqueado, 
+K: retorna o número de bloqueios já feitos nesse recurso)
+-> STATS - estado do servidor (Y: número de recursos bloqueados atualmente, 
+N: número de recursos disponíveis, D: número de recursos desabilitados/
+indisponíveis/inativos)
+-> PRINT - imprime o estado dos recursos todos
+-> SLEEP - faz o cliente dormir duranto x segundos sem pedir novos comandos
+-> EXIT - cliente finaliza tudo e fecha programa
+
+Processo:
+Cliente recebe comandos do utilizador e vai traduzir esses comandos para 
+mensagens que serão enviadas para o servidor. Por exemplo, o utilizador passa o 
+comando LOCK 2 10 (bloqueia o recurso 2 por 10 segundos), o cliente recebe esse 
+comando do utilizador e cria uma mensagem (string) com a informação LOCK 2 10 1 
+(cliente 1 bloqueia o recurso 2 por 10), ou seja, acrescenta o id do cliente 
+que está a bloquear o recurso. É sempre a mesma lógica para todos os comandos, 
+sendo que cada um tem as suas especificações (ver enunciado)
+
+Todos os recursos do servidor iniciam UNLOCKED, o contador de bloqueios com 0 e
+o id do cliente que retém o recurso bloqueado com -1.
+
+Verificações:
+-> verificar se o sys.argv tem os argumentos necessários, se são convertiveis 
+para int.
+-> verificar do lado do cliente se os comandos tem os argumentos necessários e
+do lado do servidor verificar se o comando é válido.
+
+Estrutura de Dados:
+-> resource_lock: que se refere ao recurso com as informações
+	-> se está bloqueado, desbloqueado ou desabilitado;
+	-> quantas vezes já foi bloqueado;
+	-> no caso de estar bloqueado:
+		-> qual o cliente que detém a concessão de bloqueio;
+		-> até quando essa concessão é válida.
+		
+-> lock_pool: contém o conjunto de recursos que o servidor vai armazenar, dentro
+deste objeto (recurso) vai estar um resource_lock com os dados a si referentes.
+
+Cliente:
+É concretizado no ficheiro lock_client.py que vai receber como parâmetros na 
+linha de comando o id do cliente, host e port do servidor a que se vai ligar,
+por exemplo, python3 lock_client.py localhost 9999.
+
+-> loop para receber comandos com input('comando > ')
+-> estabelecer a ligação ao servidor
+-> enviar o comando e receber a resposta do servidor
+-> terminar a ligação ao servidor
+-> apresentar a resposta recebida
+
+Implementação do cliente deverá ser feita com base na classe server do ficheiro
+net_client.py. Deve ser usado o módulo sock_utils.py (receiveall(...) ainda por
+confirmar.
+Se for enviado o comando SLEEP, não será criada uma mensagem para o servidor 
+apenas faz os x segundos de sleep e volta a pedir um comando.
+
+Servidor:
+É concretizado no ficheiro lock_server.py que vai receber como parâmetros na 
+linha de comando o host, port do servidor que vai abrir, número de recursos que
+serão geridos pelo servidor (N), número de bloqueios permitidos em cada recurso
+(K), número permitido de recursos bloqueados num dado momento (Y), por exemplo, 
+python3 lock_server.py localhost 9999 4 3 2.
+
+-> aceitar uma ligação
+-> mostrar no ecrã informação sobre a ligação (hots e port)
+-> verificar se existem recursos com bloqueios cujo tempo de concessão de
+exclusão mútua tenha expirado, e remover esses bloqueios nos recursos
+-> verificar se existem recursos que já atingiram os K bloqueios permitidos, e
+desativar estes recursos se for o caso
+-> receber uma mensagem com um pedido
+-> processar esse pedido
+-> responder ao cliente
+-> fechar a ligação.
+
+Mais detalhes:
+-> módulo time() - se o time atual for maior que o time da concessão de um 
+determinado recurso significa que o time já expirou e que o recurso pode ser
+liberado.
+-> cat comandos.txt | python3 lock_client.py 1  localhost 9999 -> envia logo
+todos os comandos de uma vez só.
+-> Tanto o programa cliente quanto o servidor devem imprimir todas as mensagens
+enviadas e recebidas. No caso de cliente serão todos os pedidos enviados e 
+respostas recebidas. No caso do servidor serão tods os pedidos recebidos e as
+respostas a serem enviadas. A saída do cliente e do servidor devem ser 
+semelhantes e serem comparadas com a ferramenta diff.
+-> python3 lock_server.py localhost 9999 4 3 2 > output_server.log
+-> cat comandos.txt | python3 lock_client.py 1 localhost 9999 > output_client.log
+-> diff output_server.log output_client.log

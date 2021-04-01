@@ -1,0 +1,29 @@
+comando > 
+LOCK 0 10 1
+OK
+comando > 
+SLEEP 8
+CLIENT SLEPT FOR 8 SECONDS
+comando > 
+LOCK 0 10 1
+NOK
+comando > 
+STATUS R 0
+LOCKED
+comando > 
+STATUS K 0
+3
+comando > 
+STATS Y
+1
+comando > 
+UNLOCK 0 1
+OK
+comando > 
+PRINT
+
+R 0 DISABLE 3 
+R 1 UNLOCKED 0 
+R 2 UNLOCKED 0 
+R 3 UNLOCKED 0 
+comando > 

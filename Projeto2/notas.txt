@@ -1,0 +1,49 @@
+Continuação do projeto 1.
+Objetivo: gestor de pedidos simultâneos a recursos e processamento destes em exclusão
+mútua. O seu propósito é controlar o acesso a um conjunto de resursos partilhados num
+sistema distribuído, onde diferentes clientes podem requerer de forma concorrente o 
+acesso aos recursos. Um recurso permite o acesso exclusivamente a um só cliente, 
+significando que o acesso a outros clientes é negado enquanto o recurso estiver na
+posse do cliente. Além disso, um recurso está disponível até um máximo de K bloqueios,
+ou seja, findo os K bloqueios em simultâneo. O gestor será concretizado num servidor
+escrito na linguagem Python.
+
+ALTERAÇÕES/MODIFICAÇÕES RELATIVAMENTE AO PROJETO 1:
+*Serialização - CHECK
+*Formato de pedidos enviados pelo cliente alterada - CHECK
+*Formato de respostas enviadas pelo servidor alterada - CHECK
+*Adicionar ficheiro lock_skeleton.py, que contem a classe Skeleton (lado do servidor) = PL03 - CHECK
+*Adicionar ficheiro lock_stub.py, que contem a classe Stub (lado do cliente) = PL03 - CHECK
+*Ficheiro lock_server.py será dividido em dois: lock_server.py e lock_pool.py - CHECK
+
+CLIENTE(lock_client.py) -> STUB(lock_stub.py) -> COMUNICAÇÃO(net_client.py) -> SERVIDOR(lock_server.py) -> 
+-> SKELETON(lock_skeleton.py) -> ESTRUTURA DE DADOS(lock_pool.py)
+
+Matéria a usar: TP03 e PL04 (suporte a múltiplos clientes)
+
+Pretende-se que os clientes estabeleçam a ligação ao servidor e que esta se mantenha aberta
+até que o programa cliente seja terminado. Durante a ligação o cliente poderá enviar múltiplos
+comandos.
+
+Tratar os possíveis erros em todas as chamadas ao sistema: declarações try/except.
+Ser capaz de receber mensagens fragmentadas: (relembrar TP01 e PL01)  função receive_all e usá-la em
+substituição de recv (que apenas será usada na concretização de receive_all())
+
+Validação das mensagesn recebidas e enviadas:
+Certificar que as mensagens introduzidas pelos clientes sejam validadas por estes antes do seu envio ao
+servidor, devolvendo uma mensagem de erro. Também, as mensganes recebidos pelo servidor devem ser validadas.
+
+CÓDIGOS:
+*LOCK       -> [10,nrrecurso,limtemp,idc]   -- [11,True]/[11,False]/[11,None]
+*UNLOCK     -> [20,nrrecurso,idc]           -- [21,True]/[21,False]/[21,None]
+*STATUS R   -> [30,nrrecurso]               -- [31,True]/[31,False]/[31,Ellipsis]/[31,None]
+*STATUS K   -> [40,nrrecurso]               -- [41,nr]/[41,None]
+*STATS Y    -> [50]                         -- [51,nr]
+*STATS N    -> [60]                         -- [61,nr]
+*STATS D    -> [70]                         -- [71,nr]
+*PRINT      -> [80]                         -- [81,print]
+
+OK = True
+NOK = False
+UNKNOWN RESOURCE = None
+DISABLE = Ellipsis
